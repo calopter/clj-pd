@@ -1,0 +1,6 @@
+#N canvas 626 267 450 300 16;
+#X obj 131 161 pipe;
+#X obj 131 118 pipe;
+#X obj 131 62 osc~ 440;
+#X connect 0 0 1 1;
+#X connect 1 0 0 1;
