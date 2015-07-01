@@ -19,7 +19,7 @@
         obj-map (zipmap keys els)]
     (->> obj-map (str-map->num :x) (str-map->num :y))))
 
-(def test-obj (-> canvas objs second to-map))
+(def obj-test (-> canvas objs second to-map))
 
 (defn move [obj x y]
   (assoc obj :x x :y y))
@@ -53,6 +53,15 @@
 ;; add array to this
 
 ;;add args vector
+
+(defn obj
+  ([] (obj {}))
+  ([vals-map]
+   (parse-out (make-obj vals-map))))
+
+(defn make-obj [vals-map]
+  (let [defaults (array-map :canvas "pd-new" :type "obj" :x 100 :y 100 :name "osc~")]
+    (merge defaults vals-map)))
 
 (defn clear-canvas [canvas]
   (send-pd (str canvas " clear;")))
