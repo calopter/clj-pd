@@ -68,7 +68,16 @@
   (array-map :canvas "pd-new" :type "graph" :name "mygraph"))
 ;; add array to this
 
-;;add args vector
+;; you can't override :type with make-obj,
+;; use a protocol and reify make-obj as make-box?
+;; each type then conjs the appropriate extra keywords to base-keys and calls make-box with it
+
+;;TODO
+
+;; finish box creation system
+;; parse pd files
+;; track all boxes in order to simplify making connections
+;; deal with synchronizing between pd file and internal data structures
 
 (defn obj
   "creates and sends an object from optional values map"
@@ -79,8 +88,8 @@
 (defn make-obj [vals-map]
   "merges optional values map with a defaults map,
    returns an obj as array-map"
-  (let [ks (conj base-keys :name)
-        vs ["pd-new" "obj" 100 100 "osc~"]
+  (let [ks (conj base-keys :name :args)
+        vs ["pd-new" "obj" 100 100 "osc~" []]
         defaults (zip-array-map ks vs)]
     (merge defaults vals-map)))
 
@@ -92,6 +101,7 @@
   "array map to msg string for pdsend"
   (let [els (->> arrmap
                  vals
+                 flatten
                  (interpose " ")
                  (map str)
                  (apply str))]
