@@ -71,13 +71,14 @@
 ;;add args vector
 
 (defn obj
-  "creates and sends an object from option values map"
+  "creates and sends an object from optional values map"
   ([] (obj {}))
   ([vals-map]
    (-> vals-map make-obj parse-out send-pd)))
 
 (defn make-obj [vals-map]
-  "merges optional values map with a defaults map"
+  "merges optional values map with a defaults map,
+   returns an obj as array-map"
   (let [ks (conj base-keys :name)
         vs ["pd-new" "obj" 100 100 "osc~"]
         defaults (zip-array-map ks vs)]
