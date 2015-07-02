@@ -34,20 +34,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def port 8000)
-(def path "server.pd")
+(def server-path "server.pd")
+(def pdsend-path "pdsend")
+(def pd-path "pd")
 
-(def test-obj
-  (array-map :canvas "pd-new" :type "obj" :x 10 :y 20 :name "osc~"))
+(def base-keys [:canvas :type :x :y])
+
+(defn zip-array-map [ks vs]
+  "like zip-map but makes an array-map"
+  (let [kv (interleave ks vs)]
+    (apply array-map kv)))
+
+(comment
+  (def test-obj
+    (array-map :canvas "pd-new" :type "obj" :x 10 :y 20 :name "osc~" :args [440])))
+
 (def test-msg
   (array-map :canvas "pd-new" :type "msg" :x 100 :y 100 :text "hello world"))
+
 (def test-float
   (array-map :canvas "pd-new" :type "floatatom" :x 100 :y 100))
+
 (def test-symbol
   (array-map :canvas "pd-new" :type "symbolatom" :x 350 :y 70 :symbol "symbol"))
+
 (def test-text
   (array-map :canvas "pd-new" :type "text" :x 350 :y 130 :text "Hello World!"))
+
 (def test-connection
   (array-map :canvas "pd-new" :type "connect" :orig-obj 0 :outlet 0 :dest-obj 1 :inlet 0))
+
 (def test-graph
   (array-map :canvas "pd-new" :type "graph" :name "mygraph"))
 ;; add array to this
@@ -55,29 +71,36 @@
 ;;add args vector
 
 (defn obj
+  "creates and sends an object from option values map"
   ([] (obj {}))
   ([vals-map]
-   (parse-out (make-obj vals-map))))
+   (-> vals-map make-obj parse-out send-pd)))
 
 (defn make-obj [vals-map]
-  (let [defaults (array-map :canvas "pd-new" :type "obj" :x 100 :y 100 :name "osc~")]
+  "merges optional values map with a defaults map"
+  (let [ks (conj base-keys :name)
+        vs ["pd-new" "obj" 100 100 "osc~"]
+        defaults (zip-array-map ks vs)]
     (merge defaults vals-map)))
 
 (defn clear-canvas [canvas]
+  "wipes canvas"
   (send-pd (str canvas " clear;")))
 
 (defn parse-out [arrmap]
+  "array map to msg string for pdsend"
   (let [els (->> arrmap
                  vals
                  (interpose " ")
                  (map str)
-                 (apply str))
-        msg (str els \; \newline)]
-    (send-pd msg)))
+                 (apply str))]
+    (str els \; \newline)))
 
- (defn send-pd [msg]
-     (let [command (format "echo '%s' | pdsend %d" msg port)]
+(defn send-pd [msg]
+  "calls pdsend from a shell, passing it msg"
+     (let [command (format "echo '%s' | %s %d" msg pdsend-path port)]
        (clojure.java.shell/sh "bash" "-c" command)))
 
 (defn run-pd [path]
-  (future (clojure.java.shell/sh "pd" path)))
+  "runs pd as a subprocess"
+  (future (clojure.java.shell/sh pd-path path)))
