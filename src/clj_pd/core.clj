@@ -1,36 +1,6 @@
 (ns clj_pd.core
   (:require [clojure.string :as s]))
 
-(def path "ftest.pd")
-
-(def canvas (slurp path))
-
-(defn objs [canvas]
-  (s/split canvas #";\n"))
-
-(defn str-map->num [k m]
-  (let [s (k m)
-        num (read-string s)]
-    (assoc m k num)))
-
-(defn to-map [obj]
-  (let [els (s/split obj #" ")
-        keys [:hash :type :x :y :name]
-        obj-map (zipmap keys els)]
-    (->> obj-map (str-map->num :x) (str-map->num :y))))
-
-(def test-obj (-> canvas objs second to-map))
-
-(defn move [obj x y]
-  (assoc obj :x x :y y))
-
-(defn stringify [{:keys [hash type x y name]}]
-  (let [order [hash type x y name]
-        spaces (interpose " " order)
-        strs (map str spaces)
-        s (apply str strs)]
-    (str s \; \newline)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def port 8000)
@@ -67,8 +37,21 @@
     (send-pd msg)))
 
  (defn send-pd [msg]
-     (let [command (format "echo '%s' | pdsend %d" msg port)]
+     (let [command (format "echo '%s' | ./pdsend %d" msg port)]
        (clojure.java.shell/sh "bash" "-c" command)))
 
 (defn run-pd [path]
   (future (clojure.java.shell/sh "pd" path)))
+
+(defn armpify [canvas type x y name message]
+  (array-map :canvas canvas :type type :x x :y y :name name :message message))
+
+(defn osc [x y freq]
+  (send-pd (parse-out (armpify "pd-new" "obj" x  y "osc~" freq))))
+
+ (defn dac [x y]
+     (send-pd (parse-out (armpify "pd-new" "obj" x  y "dac~" ""))))
+
+(defn slider [x y]
+     (send-pd (parse-out (armpify "pd-new" "obj" x  y "slider" ""))))
+
