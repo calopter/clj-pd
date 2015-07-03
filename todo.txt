@@ -1,0 +1,6 @@
+TODO:
+
+finish box creation system
+parse pd files
+track all boxes in order to simplify making connections
+deal with synchronizing between pd file and internal data structures
